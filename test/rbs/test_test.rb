@@ -21,6 +21,8 @@ class RBS::TestTest < Minitest::Test
     end
   end
 
+
+
   def test_verify_instance_method
     SignatureManager.new do |manager|
       manager.files[Pathname("foo.rbs")] = <<EOF

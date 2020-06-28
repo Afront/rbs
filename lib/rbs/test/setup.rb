@@ -48,7 +48,7 @@ TracePoint.trace :end do |tp|
     if filter.any? {|f| match(f, class_name) } && skips.none? {|f| match(f, class_name) }
       type_name = RBS::Namespace.parse(class_name).absolute!.to_type_name
       if hooks.none? {|hook| hook.klass == tp.self }
-        if env.find_class(type_name)
+        if env.class_decls[type_name]
           logger.info "Setting up hooks for #{class_name}"
           hooks << RBS::Test::Hook.install(env, tp.self, logger: logger).verify_all.raise_on_error!(raise_on_error)
         end

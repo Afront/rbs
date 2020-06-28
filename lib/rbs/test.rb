@@ -1,3 +1,5 @@
+require "securerandom"
+require "rbs/test/observer"
 require "rbs/test/spy"
 require "rbs/test/errors"
 require "rbs/test/type_check"
@@ -16,8 +18,61 @@ module RBS
     INSPECT = Kernel.instance_method(:inspect)
     METHODS = Kernel.instance_method(:methods)
 
-    ArgumentsReturn = Struct.new(:arguments, :return_value, :exception, keyword_init: true)
+    class ArgumentsReturn
+      attr_reader :arguments
+      attr_reader :exit_value
+      attr_reader :exit_type
+
+      def initialize(arguments:, exit_value:, exit_type:)
+        @arguments = arguments
+        @exit_value = exit_value
+        @exit_type = exit_type
+      end
+
+      def self.return(arguments:, value:)
+        new(arguments: arguments, exit_value: value, exit_type: :return)
+      end
+
+      def self.exception(arguments:, exception:)
+        new(arguments: arguments, exit_value: exception, exit_type: :exception)
+      end
+
+      def self.break(arguments:)
+        new(arguments: arguments, exit_value: nil, exit_type: :break)
+      end
+
+      def return_value
+        raise unless exit_type == :return
+        exit_value
+      end
+
+      def exception
+        raise unless exit_type == :exception
+        exit_value
+      end
+
+      def return?
+        exit_type == :return
+      end
+
+      def exception?
+        exit_type == :exception
+      end
+
+      def break?
+        exit_type == :break
+      end
+    end
+
     CallTrace = Struct.new(:method_name, :method_call, :block_calls, :block_given, keyword_init: true)
+
+    class <<self
+      attr_accessor :suffix
+
+      def reset_suffix
+        self.suffix = "RBS_TEST_#{SecureRandom.hex(3)}"
+      end
+    end
 
     def self.call(receiver, method, *args, **kwargs, &block)
       method.bind_call(receiver, *args, **kwargs, &block)

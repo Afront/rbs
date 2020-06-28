@@ -6,6 +6,24 @@ require "stringio"
 
 Minitest::Reporters.use! [Minitest::Reporters::DefaultReporter.new]
 
+# RBS.logger.level = Logger::DEBUG
+
+if ENV["RUNTIME_TEST"]
+  require "rbs/test"
+
+  loader = RBS::EnvironmentLoader.new
+  loader.add(path: Pathname(__dir__)+"../sig")
+
+  env = RBS::Environment.from_loader(loader).resolve_type_names
+
+  test_classes = []
+  test_classes << RBS::Buffer
+  test_classes << RBS::Location
+  test_classes.each do |klass|
+    RBS::Test::Hook.install(env, klass, logger: RBS.logger).verify_all.raise_on_error!(true)
+  end
+end
+
 module TestHelper
   def parse_type(string, variables: Set.new)
     RBS::Parser.parse_type(string, variables: variables)
