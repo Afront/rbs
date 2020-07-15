@@ -138,38 +138,29 @@ EOF
     end
   end
 
-  def get_sample_size1 size
-    ENV['RBS_TEST_SAMPLE_SIZE'] = size
-    get_sample_size
+  def do_sample_size_test(type_check, env_string, expected)
+    sample_size = type_check.get_sample_size
+    ENV['RBS_TEST_SAMPLE_SIZE'] = env_string
+
+    refute_equal type_check.get_sample_size, nil
+    assert_instance_of Integer, sample_size
+    assert_equal type_check.get_sample_size, expected
   end
 
   def test_sample_size_getter
     SignatureManager.new do |manager|
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
-
         sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sampling: true)
 
-        ENV['RBS_TEST_SAMPLE_SIZE'] = '100' 
-        assert_instance_of Integer, sampling_check.get_sample_size
-        assert_equal sampling_check.get_sample_size, 100
-
-        ENV['RBS_TEST_SAMPLE_SIZE'] = '1000' 
-        assert_instance_of Integer, sampling_check.get_sample_size
-        assert_equal sampling_check.get_sample_size, 1000
-
-        ENV['RBS_TEST_SAMPLE_SIZE'] = '10.5'
-        assert_instance_of Integer, sampling_check.get_sample_size
-        assert_equal sampling_check.get_sample_size, 11
-
-        ENV['RBS_TEST_SAMPLE_SIZE'] = 'a'
-        assert_instance_of Integer, sampling_check.get_sample_size
-        assert_equal sampling_check.get_sample_size, Test::TypeCheck::DEFAULT_SAMPLE_SIZE
-
-        ENV['RBS_TEST_SAMPLE_SIZE'] = nil
-        assert_instance_of Integer, sampling_check.get_sample_size
-        refute_equal sampling_check.get_sample_size, nil
-        assert_equal sampling_check.get_sample_size, Test::TypeCheck::DEFAULT_SAMPLE_SIZE
+        do_sample_size_test(sampling_check, '100', 100)
+        do_sample_size_test(sampling_check, '1000', 1000)
+        do_sample_size_test(sampling_check, '10.5', 11)
+        do_sample_size_test(sampling_check, '-10.5', Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
+        do_sample_size_test(sampling_check, '-1000', Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
+        do_sample_size_test(sampling_check, '-100', Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
+        do_sample_size_test(sampling_check, 'foo', Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
+        do_sample_size_test(sampling_check, nil, Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
       end
     end
   end
