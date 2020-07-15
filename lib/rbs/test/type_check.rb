@@ -10,7 +10,7 @@ module RBS
       def initialize(self_class:, builder:, sample_size: DEFAULT_SAMPLE_SIZE)
         @self_class = self_class
         @builder = builder
-        @sample_size = sample_size
+        @sample_size = (DEFAULT_SAMPLE_SIZE if sample_size == 'DEFAULT') || sample_size
         raise unless [Float, Integer, String].include? @sample_size.class
       end
 
@@ -181,7 +181,7 @@ module RBS
       end
 
       def sampling?
-        !!@sample_size && @sample_size != 'ALL'
+        @sample_size != 'ALL'
       end
 
       def sample(array)

@@ -17,7 +17,7 @@ rescue
   STDERR.puts "  [OPTIONAL] RBS_TEST_SKIP: skip testing classes"
   STDERR.puts "  [OPTIONAL] RBS_TEST_OPT: options for signatures (`-r` for libraries or `-I` for signatures)"
   STDERR.puts "  [OPTIONAL] RBS_TEST_LOGLEVEL: one of debug|info|warn|error|fatal (defaults to info)"
-  STDERR.puts "  [OPTIONAL] RBS_TEST_SAMPLE_SIZE: sets the amount of values in a collection to be type-checked"
+  STDERR.puts "  [OPTIONAL] RBS_TEST_SAMPLE_SIZE: sets the amount of values in a collection to be type-checked (Set to `ALL` to type check all the values or to `DEFAULT` to set to the default value)"
   exit 1
 end
 
@@ -38,13 +38,14 @@ def match(filter, name)
 end
 
 def get_sample_size
-  sample_size = ENV['RBS_TEST_SAMPLE_SIZE'].to_f.round
+  env_sample_size = ENV['RBS_TEST_SAMPLE_SIZE']
+  sample_size = env_sample_size.to_f.round
 
-  if !sample_size.positive? && ENV.key?('RBS_TEST_SAMPLE_SIZE')
-    RBS.logger.warn "Invalid sample_size, defaults to #{DEFAULT_SAMPLE_SIZE}"        
+  if !sample_size.positive? && env_sample_size && env_sample_size != 'DEFAULT'
+    RBS.logger.warn "Invalid sample_size, defaults to #{RBS::Test::TypeCheck::DEFAULT_SAMPLE_SIZE}"
   end
 
-  a = sample_size.positive? && sample_size || DEFAULT_SAMPLE_SIZE
+  sample_size.positive? && sample_size || RBS::Test::TypeCheck::DEFAULT_SAMPLE_SIZE
 end
 
 

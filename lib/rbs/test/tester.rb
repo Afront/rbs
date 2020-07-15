@@ -17,7 +17,7 @@ module RBS
         @builder ||= DefinitionBuilder.new(env: env)
       end
 
-      def install!(klass, sample_size:)
+      def install!(klass, sample_size: 'DEFAULT')
         RBS.logger.info { "Installing runtime type checker in #{klass}..." }
 
         type_name = factory.type_name(klass.name).absolute!
