@@ -180,7 +180,11 @@ module RBS
 
       def get_sample_size
         sample_size = ENV['RBS_TEST_SAMPLE_SIZE'].to_f.round
-        RBS.logger.warn "Invalid sample_size, defaults to #{DEFAULT_SAMPLE_SIZE}" unless sample_size.positive?
+
+        if !sample_size.positive? && ENV.key?('RBS_TEST_SAMPLE_SIZE')
+          RBS.logger.warn "Invalid sample_size, defaults to #{DEFAULT_SAMPLE_SIZE}"        
+        end
+
         sample_size.positive? && sample_size || DEFAULT_SAMPLE_SIZE
       end
 
