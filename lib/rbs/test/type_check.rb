@@ -3,13 +3,15 @@ module RBS
     class TypeCheck
       attr_reader :self_class
       attr_reader :builder
+      attr_reader :sample_size
 
       DEFAULT_SAMPLE_SIZE = 100
 
-      def initialize(self_class:, builder:, sampling:)
+      def initialize(self_class:, builder:, sample_size: DEFAULT_SAMPLE_SIZE)
         @self_class = self_class
         @builder = builder
-        @sampling = sampling
+        @sample_size = sample_size
+        raise unless [Float, Integer, String].include? @sample_size.class
       end
 
       def overloaded_call(method, method_name, call, errors:)
@@ -178,22 +180,12 @@ module RBS
         end
       end
 
-      def get_sample_size
-        sample_size = ENV['RBS_TEST_SAMPLE_SIZE'].to_f.round
-
-        if !sample_size.positive? && ENV.key?('RBS_TEST_SAMPLE_SIZE')
-          RBS.logger.warn "Invalid sample_size, defaults to #{DEFAULT_SAMPLE_SIZE}"        
-        end
-
-        sample_size.positive? && sample_size || DEFAULT_SAMPLE_SIZE
-      end
-
       def sampling?
-        !!@sampling && ENV['RBS_TEST_SAMPLE_SIZE'] != 'ALL'
+        !!@sample_size && @sample_size != 'ALL'
       end
 
       def sample(array)
-        array.size > get_sample_size && sampling? ? array.sample(get_sample_size) : array
+        sampling? && (array.size > @sample_size) ? array.sample(@sample_size) : array
       end
 
       def value(val, type)

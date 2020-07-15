@@ -10,7 +10,6 @@ begin
   opts = Shellwords.shellsplit(ENV["RBS_TEST_OPT"] || "-I sig")
   filter = ENV.fetch("RBS_TEST_TARGET").split(",")
   skips = (ENV["RBS_TEST_SKIP"] || "").split(",")
-  sampling = !ENV.key?("RBS_TEST_NO_SAMPLE")
   RBS.logger_level = (ENV["RBS_TEST_LOGLEVEL"] || "info")
 rescue
   STDERR.puts "rbs/test/setup handles the following environment variables:"
@@ -18,7 +17,6 @@ rescue
   STDERR.puts "  [OPTIONAL] RBS_TEST_SKIP: skip testing classes"
   STDERR.puts "  [OPTIONAL] RBS_TEST_OPT: options for signatures (`-r` for libraries or `-I` for signatures)"
   STDERR.puts "  [OPTIONAL] RBS_TEST_LOGLEVEL: one of debug|info|warn|error|fatal (defaults to info)"
-  STDERR.puts "  [OPTIONAL] RBS_TEST_NO_SAMPLE: if set, the type checker tests all the values of a collection"
   STDERR.puts "  [OPTIONAL] RBS_TEST_SAMPLE_SIZE: sets the amount of values in a collection to be type-checked"
   exit 1
 end
@@ -39,6 +37,17 @@ def match(filter, name)
   end
 end
 
+def get_sample_size
+  sample_size = ENV['RBS_TEST_SAMPLE_SIZE'].to_f.round
+
+  if !sample_size.positive? && ENV.key?('RBS_TEST_SAMPLE_SIZE')
+    RBS.logger.warn "Invalid sample_size, defaults to #{DEFAULT_SAMPLE_SIZE}"        
+  end
+
+  a = sample_size.positive? && sample_size || DEFAULT_SAMPLE_SIZE
+end
+
+
 factory = RBS::Factory.new()
 tester = RBS::Test::Tester.new(env: env)
 
@@ -50,7 +59,7 @@ TracePoint.trace :end do |tp|
       if tester.checkers.none? {|hook| hook.klass == tp.self }
         if env.class_decls.key?(class_name)
           logger.info "Setting up hooks for #{class_name}"
-          tester.install!(tp.self, sampling: sampling)
+          tester.install!(tp.self, sample_size: get_sample_size)
         end
       end
     end

@@ -30,7 +30,7 @@ EOF
         typecheck = Test::TypeCheck.new(
           self_class: Integer,
           builder: DefinitionBuilder.new(env: env),
-          sampling: false
+          sample_size: false
         )
 
         assert typecheck.value(3, parse_type("::foo"))
@@ -62,7 +62,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sampling: true)
+        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: true)
 
         assert typecheck.value([], parse_type("::Array[::Integer]"))
         assert typecheck.value([1], parse_type("::Array[::Integer]"))
@@ -79,7 +79,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sampling: true)
+        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: true)
 
         # hash = Array.new(100) {|i| [i, i.to_s] }.to_h
 
@@ -104,7 +104,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sampling: true)
+        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: true)
 
         assert typecheck.value([1,2,3].each, parse_type("Enumerator[Integer, Array[Integer]]"))
         assert typecheck.value(Array.new(400, 3).each, parse_type("Enumerator[Integer, Array[Integer]]"))
@@ -121,48 +121,28 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        no_sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sampling: false)
+        no_sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 'ALL')
         assert_equal [1,2,3,4], no_sampling_check.sample([1,2,3,4])
         Array.new(400) {|i| i.to_s }.tap do |a|
           assert_equal a, no_sampling_check.sample(a)
         end
 
-        sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sampling: true)
+        sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100)
         assert_equal [1,2,3,4], sampling_check.sample([1,2,3,4])
         Array.new(400) {|i| i.to_s }.tap do |a|
           refute_equal a, sampling_check.sample(a)
           assert_equal 100, sampling_check.sample(a).size
           assert_empty (sampling_check.sample(a) - a)
         end
-      end
-    end
-  end
 
-  def do_sample_size_test(type_check, env_string, expected)
-    silence_warnings do
-      sample_size = type_check.get_sample_size
-      ENV['RBS_TEST_SAMPLE_SIZE'] = env_string
+        sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder)
+        assert_equal [1,2,3,4], sampling_check.sample([1,2,3,4])
+        Array.new(400) {|i| i.to_s }.tap do |a|
+          refute_equal a, sampling_check.sample(a)
+          assert_equal Test::TypeCheck::DEFAULT_SAMPLE_SIZE, sampling_check.sample(a).size
+          assert_empty (sampling_check.sample(a) - a)
+        end
 
-      refute_equal type_check.get_sample_size, nil
-      assert_instance_of Integer, sample_size
-      assert_equal type_check.get_sample_size, expected
-    end
-  end
-
-  def test_sample_size_getter
-    SignatureManager.new do |manager|
-      manager.build do |env|
-        builder = DefinitionBuilder.new(env: env)
-        sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sampling: true)
-    
-        do_sample_size_test(sampling_check, '100', 100)
-        do_sample_size_test(sampling_check, '1000', 1000)
-        do_sample_size_test(sampling_check, '10.5', 11)
-        do_sample_size_test(sampling_check, '-10.5', Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
-        do_sample_size_test(sampling_check, '-1000', Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
-        do_sample_size_test(sampling_check, '-100', Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
-        do_sample_size_test(sampling_check, 'foo', Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
-        do_sample_size_test(sampling_check, nil, Test::TypeCheck::DEFAULT_SAMPLE_SIZE)
       end
     end
   end
@@ -176,7 +156,7 @@ EOF
         typecheck = Test::TypeCheck.new(
           self_class: Object,
           builder: DefinitionBuilder.new(env: env),
-          sampling: false
+          sample_size: false
         )
 
         parse_method_type("(Integer) -> String").tap do |method_type|
@@ -231,7 +211,7 @@ EOF
         typecheck = Test::TypeCheck.new(
           self_class: Object,
           builder: DefinitionBuilder.new(env: env),
-          sampling: false
+          sample_size: false
         )
 
         parse_method_type("(Integer) -> String").tap do |method_type|
@@ -378,7 +358,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Object, builder: builder, sampling: false)
+        typecheck = Test::TypeCheck.new(self_class: Object, builder: builder, sample_size: false)
 
         builder.build_instance(type_name("::Foo")).tap do |foo|
           typecheck.overloaded_call(
