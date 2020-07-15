@@ -138,6 +138,42 @@ EOF
     end
   end
 
+  def get_sample_size1 size
+    ENV['RBS_TEST_SAMPLE_SIZE'] = size
+    get_sample_size
+  end
+
+  def test_sample_size_getter
+    SignatureManager.new do |manager|
+      manager.build do |env|
+        builder = DefinitionBuilder.new(env: env)
+
+        sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sampling: true)
+
+        ENV['RBS_TEST_SAMPLE_SIZE'] = '100' 
+        assert_instance_of Integer, sampling_check.get_sample_size
+        assert_equal sampling_check.get_sample_size, 100
+
+        ENV['RBS_TEST_SAMPLE_SIZE'] = '1000' 
+        assert_instance_of Integer, sampling_check.get_sample_size
+        assert_equal sampling_check.get_sample_size, 1000
+
+        ENV['RBS_TEST_SAMPLE_SIZE'] = '10.5'
+        assert_instance_of Integer, sampling_check.get_sample_size
+        assert_equal sampling_check.get_sample_size, 11
+
+        ENV['RBS_TEST_SAMPLE_SIZE'] = 'a'
+        assert_instance_of Integer, sampling_check.get_sample_size
+        assert_equal sampling_check.get_sample_size, Test::TypeCheck::DEFAULT_SAMPLE_SIZE
+
+        ENV['RBS_TEST_SAMPLE_SIZE'] = nil
+        assert_instance_of Integer, sampling_check.get_sample_size
+        refute_equal sampling_check.get_sample_size, nil
+        assert_equal sampling_check.get_sample_size, Test::TypeCheck::DEFAULT_SAMPLE_SIZE
+      end
+    end
+  end
+
   def test_typecheck_return
     SignatureManager.new do |manager|
       manager.files[Pathname("foo.rbs")] = <<EOF

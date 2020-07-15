@@ -19,6 +19,7 @@ rescue
   STDERR.puts "  [OPTIONAL] RBS_TEST_OPT: options for signatures (`-r` for libraries or `-I` for signatures)"
   STDERR.puts "  [OPTIONAL] RBS_TEST_LOGLEVEL: one of debug|info|warn|error|fatal (defaults to info)"
   STDERR.puts "  [OPTIONAL] RBS_TEST_NO_SAMPLE: if set, the type checker tests all the values of a collection"
+  STDERR.puts "  [OPTIONAL] RBS_TEST_SAMPLE_SIZE: sets the amount of values in a collection to be type-checked"
   exit 1
 end
 

@@ -4,6 +4,8 @@ module RBS
       attr_reader :self_class
       attr_reader :builder
 
+      DEFAULT_SAMPLE_SIZE = 100
+
       def initialize(self_class:, builder:, sampling:)
         @self_class = self_class
         @builder = builder
@@ -176,12 +178,19 @@ module RBS
         end
       end
 
+      def get_sample_size
+        sample_size = ENV['RBS_TEST_SAMPLE_SIZE'].to_f.round
+        a = sample_size.positive? && sample_size || DEFAULT_SAMPLE_SIZE
+        raise a.class unless a.is_a? Integer
+        a
+      end
+
       def sampling?
         !!@sampling
       end
 
       def sample(array)
-        array.size > 100 && sampling? ? array.sample(100) : array
+        array.size > get_sample_size && sampling? ? array.sample(get_sample_size) : array
       end
 
       def value(val, type)
