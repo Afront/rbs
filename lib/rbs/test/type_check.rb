@@ -7,11 +7,10 @@ module RBS
 
       DEFAULT_SAMPLE_SIZE = 100
 
-      def initialize(self_class:, builder:, sample_size: DEFAULT_SAMPLE_SIZE)
+      def initialize(self_class:, builder:, sample_size: nil)
         @self_class = self_class
         @builder = builder
-        @sample_size = (DEFAULT_SAMPLE_SIZE if sample_size == 'DEFAULT') || sample_size
-        raise unless [Float, Integer, String].include? @sample_size.class
+        @sample_size = sample_size != 'ALL' && (sample_size || DEFAULT_SAMPLE_SIZE)
       end
 
       def overloaded_call(method, method_name, call, errors:)
@@ -180,12 +179,8 @@ module RBS
         end
       end
 
-      def sampling?
-        @sample_size != 'ALL'
-      end
-
       def sample(array)
-        sampling? && (array.size > @sample_size) ? array.sample(@sample_size) : array
+        @sample_size && (array.size > @sample_size) ? array.sample(@sample_size) : array
       end
 
       def value(val, type)

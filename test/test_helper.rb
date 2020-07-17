@@ -42,6 +42,12 @@ module TestHelper
     end
   end
 
+  def silence_errors
+    RBS.logger.stub :error, nil do
+      yield
+    end
+  end
+
   def silence_warnings
     RBS.logger.stub :warn, nil do
       yield
@@ -149,6 +155,26 @@ SIG
 
     # Check syntax error
     RBS::Parser.parse_signature(writer.out.string)
+  end
+
+  def assert_raises_with_message(error_type, expected_message)
+    silence_errors do
+      e = assert_raises(error_type) { yield }
+      assert_match expected_message, e.message
+    end
+  end
+
+  def assert_raises_from_sampling_check(builder, sample_size)
+    assert_raises_with_message(ArgumentError, /comparison of .+ with .+ failed/) do
+      sampling_check = RBS::Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: sample_size)
+      sampling_check.sample([0,1,2,3,4])
+    end
+  end
+
+  def assert_sampling_check(builder, sample_size, obj_to_be_sampled)
+    assert sampling_check = RBS::Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: sample_size)
+    assert sampling_check.sample(obj_to_be_sampled)
+    sampling_check.sample(obj_to_be_sampled)
   end
 end
 

@@ -6,11 +6,24 @@ require "shellwords"
 
 logger = Logger.new(STDERR)
 
+def get_sample_size string
+  return string if string.nil? || string == 'ALL'
+  validate_size string
+end
+
+def validate_size size
+  int_size = size.to_i
+  return int_size if int_size.positive?
+  RBS.logger.error "The given sample size (#{size.inspect}) is not a valid value. Please give a positive number!"
+  exit 1
+end
+
 begin
   opts = Shellwords.shellsplit(ENV["RBS_TEST_OPT"] || "-I sig")
   filter = ENV.fetch("RBS_TEST_TARGET").split(",")
   skips = (ENV["RBS_TEST_SKIP"] || "").split(",")
   RBS.logger_level = (ENV["RBS_TEST_LOGLEVEL"] || "info")
+  sample_size = get_sample_size ENV['RBS_TEST_SAMPLE_SIZE']
 rescue
   STDERR.puts "rbs/test/setup handles the following environment variables:"
   STDERR.puts "  [REQUIRED] RBS_TEST_TARGET: test target class name, `Foo::Bar,Foo::Baz` for each class or `Foo::*` for all classes under `Foo`"
@@ -37,18 +50,6 @@ def match(filter, name)
   end
 end
 
-def get_sample_size
-  env_sample_size = ENV['RBS_TEST_SAMPLE_SIZE']
-  sample_size = env_sample_size.to_f.round
-
-  if !sample_size.positive? && env_sample_size && env_sample_size != 'DEFAULT'
-    RBS.logger.warn "Invalid sample_size, defaults to #{RBS::Test::TypeCheck::DEFAULT_SAMPLE_SIZE}"
-  end
-
-  sample_size.positive? && sample_size || RBS::Test::TypeCheck::DEFAULT_SAMPLE_SIZE
-end
-
-
 factory = RBS::Factory.new()
 tester = RBS::Test::Tester.new(env: env)
 
@@ -60,7 +61,7 @@ TracePoint.trace :end do |tp|
       if tester.checkers.none? {|hook| hook.klass == tp.self }
         if env.class_decls.key?(class_name)
           logger.info "Setting up hooks for #{class_name}"
-          tester.install!(tp.self, sample_size: get_sample_size)
+          tester.install!(tp.self, sample_size: sample_size)
         end
       end
     end

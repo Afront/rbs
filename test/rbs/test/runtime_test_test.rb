@@ -5,10 +5,10 @@ require "logger"
 
 return unless Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.7.0')
 
-class RBS::Test::RuntimeTestTest < Minitest::Test
+module TestSetupHelper
   include TestHelper
 
-  def test_runtime_test
+  def do_runtime_session(other_env: {})
     SignatureManager.new(system_builtin: true) do |manager|
       manager.files[Pathname("foo.rbs")] = <<EOF
 class Hello
@@ -46,15 +46,45 @@ RUBY
           "RBS_TEST_TARGET" => "::Hello",
           "RBS_TEST_OPT" => "-I./foo.rbs"
         }
-        _out, err, status = Open3.capture3(env, "ruby", "-rbundler/setup", "-rrbs/test/setup", "sample.rb", chdir: path.to_s)
+        _out, err, status = Open3.capture3(env.merge(other_env), "ruby", "-rbundler/setup", "-rrbs/test/setup", "sample.rb", chdir: path.to_s)
 
         # STDOUT.puts _out
         # STDERR.puts err
 
         refute_operator status, :success?
-        assert_match(/Setting up hooks for ::Hello$/, err)
-        assert_match(/TypeError: \[Hello#move\] ArgumentError:/, err)
+
+        err
       end
     end
+  end
+
+  def assert_runtime_session(other_env: {})
+    err = do_runtime_session(other_env: other_env)
+
+    assert_match(/Setting up hooks for ::Hello$/, err)
+    assert_match(/TypeError: \[Hello#move\] ArgumentError:/, err)
+  end
+
+  def assert_exit(other_env: {})
+    err = do_runtime_session(other_env: other_env)
+    assert_match(/E, .+ ERROR -- rbs: The given sample size (.+) is not a valid value. Please give a positive number!\n/, err)
+  end
+end
+
+class RBS::Test::RuntimeTestTest < Minitest::Test
+  include TestSetupHelper
+
+  def test_runtime_test 
+    assert_runtime_session
+  end
+
+  def test_get_sample_size
+    assert_runtime_session(other_env: {'RBS_TEST_SAMPLE_SIZE' => '100'})
+    assert_runtime_session(other_env: {'RBS_TEST_SAMPLE_SIZE' => '50'})
+    assert_runtime_session(other_env: {'RBS_TEST_SAMPLE_SIZE' => 'ALL'})
+
+    assert_exit(other_env: {'RBS_TEST_SAMPLE_SIZE' => 'FOO'})
+    assert_exit(other_env: {'RBS_TEST_SAMPLE_SIZE' => '0'})
+    assert_exit(other_env: {'RBS_TEST_SAMPLE_SIZE' => '-1'})
   end
 end
