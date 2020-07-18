@@ -1,5 +1,4 @@
 require "test_helper"
-
 require "rbs/test"
 require "logger"
 
@@ -67,7 +66,7 @@ RUBY
 
   def assert_exit(other_env: {})
     err = do_runtime_session(other_env: other_env)
-    assert_match(/E, .+ ERROR -- rbs: The given sample size (.+) is not a valid value. Please give a positive number!\n/, err)
+    assert_match(/E, .+ ERROR -- rbs: Sample size should be a positive integer: `.+`\n/, err)
   end
 end
 

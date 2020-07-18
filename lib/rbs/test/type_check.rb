@@ -10,7 +10,7 @@ module RBS
       def initialize(self_class:, builder:, sample_size: nil)
         @self_class = self_class
         @builder = builder
-        @sample_size = sample_size != 'ALL' && (sample_size || DEFAULT_SAMPLE_SIZE)
+        @sample_size = sample_size
       end
 
       def overloaded_call(method, method_name, call, errors:)

@@ -1,22 +1,14 @@
 require "rbs"
 require "rbs/test"
+require "rbs/test/setup_helper"
 
 require "optparse"
 require "shellwords"
+# require_relative 'setup_helper'
+
+include RBS::Test::SetupHelper
 
 logger = Logger.new(STDERR)
-
-def get_sample_size string
-  return string if string.nil? || string == 'ALL'
-  validate_size string
-end
-
-def validate_size size
-  int_size = size.to_i
-  return int_size if int_size.positive?
-  RBS.logger.error "The given sample size (#{size.inspect}) is not a valid value. Please give a positive number!"
-  exit 1
-end
 
 begin
   opts = Shellwords.shellsplit(ENV["RBS_TEST_OPT"] || "-I sig")
@@ -24,7 +16,11 @@ begin
   skips = (ENV["RBS_TEST_SKIP"] || "").split(",")
   RBS.logger_level = (ENV["RBS_TEST_LOGLEVEL"] || "info")
   sample_size = get_sample_size ENV['RBS_TEST_SAMPLE_SIZE']
-rescue
+rescue InvalidSampleSizeError => exception
+  RBS.logger.error exception.message
+  exit 1
+rescue Exception => e
+  raise e.message
   STDERR.puts "rbs/test/setup handles the following environment variables:"
   STDERR.puts "  [REQUIRED] RBS_TEST_TARGET: test target class name, `Foo::Bar,Foo::Baz` for each class or `Foo::*` for all classes under `Foo`"
   STDERR.puts "  [OPTIONAL] RBS_TEST_SKIP: skip testing classes"
