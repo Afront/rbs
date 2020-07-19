@@ -1,10 +1,7 @@
 require "rbs"
 require "rbs/test"
-require "rbs/test/setup_helper"
-
 require "optparse"
 require "shellwords"
-# require_relative 'setup_helper'
 
 include RBS::Test::SetupHelper
 
