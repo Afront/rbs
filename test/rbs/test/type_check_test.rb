@@ -29,7 +29,8 @@ EOF
       manager.build do |env|
         typecheck = Test::TypeCheck.new(
           self_class: Integer,
-          builder: DefinitionBuilder.new(env: env)
+          builder: DefinitionBuilder.new(env: env),
+          sample_size: 100
         )
 
         assert typecheck.value(3, parse_type("::foo"))
@@ -120,68 +121,13 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
         
-        begin assert '#sample'
-          begin assert 'should return an error if `sample_size` is not a `Numeric` object'
-            assert_raises_from_sampling_check(builder, 'foo')
-            assert_raises_from_sampling_check(builder, :foo)
-            assert_raises_from_sampling_check(builder, ->(){foo})
-            assert_raises_from_sampling_check(builder, [1,2,3]) 
-          end
-
-          begin assert "should accept Integer?"
-            assert_sampling_check(builder, 1, [0,1,2,3,4])
-            assert_sampling_check(builder, 100,[0,1,2,3,4])
-            assert_sampling_check(builder, nil, [0,1,2,3,4])
-          end
-
-          begin assert 'should return an array of the same size (or less) as the sample size'
-            array = [0,1,2,3,4,5]
-            assert_equal assert_sampling_check(builder, 1, array).length, 1
-            assert_equal array.length, assert_sampling_check(builder, nil, array).length
-            assert_equal [Test::TypeCheck::DEFAULT_SAMPLE_SIZE, array.size].min, assert_sampling_check(builder, 100, array).length
-            assert_equal array.length, assert_sampling_check(builder, 6, array).length
-            assert_equal array.length, assert_sampling_check(builder, 7, array).length
-
-            array400 = Array.new(400) { |i| i }
-            assert_equal Test::TypeCheck::DEFAULT_SAMPLE_SIZE, assert_sampling_check(builder, 100, array400).length
-            assert_equal 100, assert_sampling_check(builder, 100, array400).length
-          end
-
-          begin assert 'should return the same type'
-            sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100)
-
-            array = [0,1,2,3,4,5]
-            assert_instance_of array.class, sampling_check.sample(array)
-
-            test_hash = {1 => 5, 2 => 3}
-            assert_instance_of test_hash.class, sampling_check.sample(test_hash)
-          end 
-
-          begin assert 'should return a subset of the original object'
-            sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100)
-
-            Array.new(400) {|i| i.to_s }.tap do |a|
-              assert_empty (sampling_check.sample(a) - a)
-            end
-
-            Array.new(400) {|i| i.to_s }.tap do |a|
-              refute_equal a, sampling_check.sample(a)
-              assert_equal Test::TypeCheck::DEFAULT_SAMPLE_SIZE, sampling_check.sample(a).size
-              assert_empty (sampling_check.sample(a) - a)
-            end
-          end
-
-          begin assert 'should have 100 as its default sample size'
-            assert_equal Test::TypeCheck::DEFAULT_SAMPLE_SIZE, 100
-
-            sampling_check = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100)
-
-            Array.new(400) {|i| i.to_s }.tap do |a|
-              assert_equal Test::TypeCheck::DEFAULT_SAMPLE_SIZE, sampling_check.sample(a).size
-              assert_equal 100, sampling_check.sample(a).size
-            end
-          end
-        end
+          assert_sampling_check(builder, 1, [0,1,2,3,4])
+          assert_sampling_check(builder, 3, [1,2,3,4,5])
+          assert_sampling_check(builder, 3, [1,2,3,4,'a'])
+          assert_sampling_check(builder, 3, [1,'a'])
+          assert_sampling_check(builder, 100,[0,1,2,3,4])
+          assert_sampling_check(builder, 100, Array.new(400) {|i| i})
+          assert_sampling_check(builder, nil, [0,1,2,3,4])
       end
     end
   end
@@ -194,7 +140,8 @@ EOF
       manager.build do |env|
         typecheck = Test::TypeCheck.new(
           self_class: Object,
-          builder: DefinitionBuilder.new(env: env)
+          builder: DefinitionBuilder.new(env: env),
+          sample_size: 100
         )
 
         parse_method_type("(Integer) -> String").tap do |method_type|
@@ -248,7 +195,8 @@ EOF
       manager.build do |env|
         typecheck = Test::TypeCheck.new(
           self_class: Object,
-          builder: DefinitionBuilder.new(env: env)
+          builder: DefinitionBuilder.new(env: env),
+          sample_size: 100
         )
 
         parse_method_type("(Integer) -> String").tap do |method_type|
@@ -395,7 +343,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Object, builder: builder)
+        typecheck = Test::TypeCheck.new(self_class: Object, builder: builder, sample_size: 100)
 
         builder.build_instance(type_name("::Foo")).tap do |foo|
           typecheck.overloaded_call(

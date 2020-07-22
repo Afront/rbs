@@ -4,10 +4,28 @@ require "logger"
 
 return unless Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.7.0')
 
-module TestSetupHelper
+class RBS::Test::RuntimeTestTest < Minitest::Test
   include TestHelper
 
-  def do_runtime_session(other_env: {})
+  def test_runtime_success
+    assert_test_success
+    assert_test_success(other_env: {"RBS_TEST_SAMPLE_SIZE" => '30'})
+    assert_test_success(other_env: {"RBS_TEST_SAMPLE_SIZE" => '100'})
+    assert_test_success(other_env: {"RBS_TEST_SAMPLE_SIZE" => 'ALL'})
+  end
+
+  def test_runtime_test_error_with_invalid_sample_size
+    string_err_msg = refute_test_success(other_env: {"RBS_TEST_SAMPLE_SIZE" => 'yes'})
+    assert_match(/E, .+ ERROR -- rbs: Sample size should be a positive integer: `.+`\n/, string_err_msg)
+
+    zero_err_msg = refute_test_success(other_env: {"RBS_TEST_SAMPLE_SIZE" => '0'})
+    assert_match(/E, .+ ERROR -- rbs: Sample size should be a positive integer: `.+`\n/, zero_err_msg)
+
+    negative_err_msg = refute_test_success(other_env: {"RBS_TEST_SAMPLE_SIZE" => '-1'})
+    assert_match(/E, .+ ERROR -- rbs: Sample size should be a positive integer: `.+`\n/, negative_err_msg)
+  end
+
+  def run_runtime_test(other_env:)
     SignatureManager.new(system_builtin: true) do |manager|
       manager.files[Pathname("foo.rbs")] = <<EOF
 class Hello
@@ -36,8 +54,6 @@ class Hello
 end
 
 hello = Hello.new(x: 0, y: 10)
-hello.move(y: -10)
-hello.move(10, -20)
 RUBY
 
         env = {
@@ -47,43 +63,23 @@ RUBY
         }
         _out, err, status = Open3.capture3(env.merge(other_env), "ruby", "-rbundler/setup", "-rrbs/test/setup", "sample.rb", chdir: path.to_s)
 
-        # STDOUT.puts _out
-        # STDERR.puts err
-
-        refute_operator status, :success?
-
-        err
+        return [err, status]
       end
     end
   end
 
-  def assert_runtime_session(other_env: {})
-    err = do_runtime_session(other_env: other_env)
-
-    assert_match(/Setting up hooks for ::Hello$/, err)
-    assert_match(/TypeError: \[Hello#move\] ArgumentError:/, err)
+  def assert_test_success(other_env: {})
+    silence_warnings do 
+      result = run_runtime_test(other_env: other_env)
+      assert_operator result[1], :success?
+    end
   end
 
-  def assert_exit(other_env: {})
-    err = do_runtime_session(other_env: other_env)
-    assert_match(/E, .+ ERROR -- rbs: Sample size should be a positive integer: `.+`\n/, err)
-  end
-end
-
-class RBS::Test::RuntimeTestTest < Minitest::Test
-  include TestSetupHelper
-
-  def test_runtime_test 
-    assert_runtime_session
-  end
-
-  def test_get_sample_size
-    assert_runtime_session(other_env: {'RBS_TEST_SAMPLE_SIZE' => '100'})
-    assert_runtime_session(other_env: {'RBS_TEST_SAMPLE_SIZE' => '50'})
-    assert_runtime_session(other_env: {'RBS_TEST_SAMPLE_SIZE' => 'ALL'})
-
-    assert_exit(other_env: {'RBS_TEST_SAMPLE_SIZE' => 'FOO'})
-    assert_exit(other_env: {'RBS_TEST_SAMPLE_SIZE' => '0'})
-    assert_exit(other_env: {'RBS_TEST_SAMPLE_SIZE' => '-1'})
+  def refute_test_success(other_env: {})
+    silence_warnings do 
+      err, status = run_runtime_test(other_env: other_env)
+      refute_operator status, :success?
+      err
+    end
   end
 end

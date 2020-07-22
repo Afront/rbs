@@ -7,7 +7,7 @@ module RBS
 
       DEFAULT_SAMPLE_SIZE = 100
 
-      def initialize(self_class:, builder:, sample_size: nil)
+      def initialize(self_class:, builder:, sample_size:)
         @self_class = self_class
         @builder = builder
         @sample_size = sample_size
@@ -180,7 +180,7 @@ module RBS
       end
 
       def sample(array)
-        @sample_size && (array.size > @sample_size) ? array.sample(@sample_size) : array
+        sample_size && (array.size > sample_size) ? array.sample(sample_size) : array
       end
 
       def value(val, type)
