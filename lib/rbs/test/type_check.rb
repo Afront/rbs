@@ -203,7 +203,13 @@ module RBS
         const_cache[type_name] ||= Object.const_get(type_name.to_s)
       end
 
+      def is_double?(value)
+        Test.call(value, IS_AP, RSpec::Mocks::Double) if defined? ::RSpec
+      end
+
       def value(val, type)
+        return true if is_double?(val)
+
         case type
         when Types::Bases::Any
           true
