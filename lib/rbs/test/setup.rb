@@ -12,7 +12,7 @@ begin
   filter = ENV.fetch("RBS_TEST_TARGET").split(",")
   skips = (ENV["RBS_TEST_SKIP"] || "").split(",")
   RBS.logger_level = (ENV["RBS_TEST_LOGLEVEL"] || "info")
-  sample_size = get_sample_size ENV['RBS_TEST_SAMPLE_SIZE']
+  sample_size = get_sample_size(ENV['RBS_TEST_SAMPLE_SIZE'] || '')
 rescue InvalidSampleSizeError => exception
   RBS.logger.error exception.message
   exit 1
@@ -37,7 +37,8 @@ env = RBS::Environment.from_loader(loader).resolve_type_names
 
 def match(filter, name)
   if filter.end_with?("*")
-    name.start_with?(filter[0, filter.size - 1]) || name == filter[0, filter.size-3]
+    size = filter.size
+    name.start_with?(filter[0, size - 1]) || name == filter[0, size-3]
   else
     filter == name
   end

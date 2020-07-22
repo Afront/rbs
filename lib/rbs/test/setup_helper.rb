@@ -14,13 +14,14 @@ module RBS
       
       def get_sample_size(string)
         case string
-        when nil
+        when ""
           DEFAULT_SAMPLE_SIZE
         when 'ALL'
           nil
         else
-          raise InvalidSampleSizeError.new(string) unless string.to_i.positive?
-          string.to_i
+          int_size = string.to_i
+          raise InvalidSampleSizeError.new(string) unless int_size.positive?
+          int_size
         end
       end
     end
