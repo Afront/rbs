@@ -69,8 +69,8 @@ RUBY
   end
 
   def assert_test_success(other_env: {})
-      result = run_runtime_test(other_env: other_env)
-      assert_operator result[1], :success?
+    result = run_runtime_test(other_env: other_env)
+    assert_operator result[1], :success?
   end
 
   def refute_test_success(other_env: {})
