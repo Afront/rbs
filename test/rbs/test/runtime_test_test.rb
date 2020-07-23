@@ -69,17 +69,13 @@ RUBY
   end
 
   def assert_test_success(other_env: {})
-    silence_warnings do 
       result = run_runtime_test(other_env: other_env)
       assert_operator result[1], :success?
-    end
   end
 
   def refute_test_success(other_env: {})
-    silence_warnings do 
-      err, status = run_runtime_test(other_env: other_env)
-      refute_operator status, :success?
-      err
-    end
+    err, status = run_runtime_test(other_env: other_env)
+    refute_operator status, :success?
+    err
   end
 end
