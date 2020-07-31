@@ -25,10 +25,8 @@ module RBS
 
       def concat(string:, location:)  
         @string.concat string
-        # @location.concat(location)
-#       @location = @location + location
-        @location = @location << location
-        Comment.new(string: @string, location: @location)
+        @location.concat location
+        self
       end
     end
   end

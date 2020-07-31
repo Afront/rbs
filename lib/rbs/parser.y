@@ -1149,83 +1149,16 @@ def leading_comment(location)
   @comments[location.start_line-1]
 end
 
-# Old
-# def push_comment(string, location)
-#   new_comment = AST::Comment.new(string: string+"\n", location: location)
-
-#   if (prev_comment = leading_comment(location)) && prev_comment.location.start_column == location.start_column
-#     @comments.delete prev_comment.location.end_line
-#     new_comment = AST::Comment.new(string: prev_comment.string + new_comment.string,
-#                                    location: prev_comment.location + new_comment.location)
-#   end
-
-#   @comments[new_comment.location.end_line] = new_comment
-# end
-
 def push_comment(string, location)
-  new_comment = AST::Comment.new(string: string+"\n", location: location)
-
-  if (prev_comment = leading_comment(location)) && prev_comment.location.start_column == location.start_column
-    @comments.delete prev_comment.location.end_line
-    # new_comment = AST::Comment.new(string: prev_comment.string + new_comment.string,
-    #                                location: prev_comment.location + new_comment.location)
-    new_comment = prev_comment.concat(string: new_comment.string, location: new_comment.location)
-
-    # AST::Comment.new(string: prev_comment.string + new_comment.string,
-    #                                location: prev_comment.location + new_comment.location)
-
+  if (comment = leading_comment(location)) && comment.location.start_column == location.start_column
+    @comments.delete comment.location.end_line
+    comment.concat(string: string + "\n", location: location)
+    @comments[comment.location.end_line] = comment
+  else
+    new_comment = AST::Comment.new(string: string + "\n", location: location)
+    @comments[new_comment.location.end_line] = new_comment
   end
-
-  @comments[new_comment.location.end_line] = new_comment
 end
-
-# online
-# def push_comment(string, location)
-#   if (prev_comment = leading_comment(location)) && prev_comment.location.start_column == location.start_column
-#     @comments.delete prev_comment.location.end_line
-#     prev_comment.append(content: string, location: location)  # Destructively concat new comment (string) to the previously detected comment.
-    
-#   else
-#     new_comment = AST::Comment.new(string: string+"\n", location: location)
-#   end
-
-#   @comments[new_comment.location.end_line] = new_comment
-# end
-
-# def push_comment(string, location)
-#   if (prev_comment = leading_comment(location)) && prev_comment.location.start_column == location.start_column
-#     @comments.delete prev_comment.location.end_line
-#     prev_comment.append(content: string, location: location) 
-#     new_comment = prev_comment
-#   else
-#     new_comment = AST::Comment.new(string: string+"\n", location: location)
-#   end
-
-#   @comments[new_comment.location.end_line] = new_comment
-# end
-
-
-# def push_comment(string, location)
-#   if (prev_comment = leading_comment(location)) && prev_comment.location.start_column == location.start_column
-#     @comments.delete prev_comment.location.end_line
-#     prev_comment.append(content: string, location: location)
-#     new_comment = prev_comment
-#   else
-#     new_comment = AST::Comment.new(string: string+"\n", location: location)
-#   end
-#   @comments[new_comment.location.end_line] = prev_comment
-# end
-
-# def push_comment(string, location)
-#   if (prev_comment = leading_comment(location)) && prev_comment.location.start_column == location.start_column
-#     @comments.delete prev_comment.location.end_line
-#     prev_comment.append(content: string, location: location)
-#     @comments[prev_comment.location.end_line] = prev_comment
-#   else
-#     new_comment = AST::Comment.new(string: string+"\n", location: location)
-#     @comments[new_comment.location.end_line] = new_comment
-#   end
-# end
 
 def new_token(type, value = input.matched)
   charpos = charpos(input)
