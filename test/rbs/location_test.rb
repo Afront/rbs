@@ -42,4 +42,32 @@ abc
     assert_equal 7, loc.end_pos
     assert_equal "123\nabc", loc.source
   end
+
+  def test_location_concat
+    buffer = Buffer.new(name: Pathname("foo.rbs"), content: <<-CONTENT)
+123
+abc
+    CONTENT
+
+    old_loc = Location.new(buffer: buffer, start_pos: 0, end_pos: 3)
+    new_loc = Location.new(buffer: buffer, start_pos: 4, end_pos: 7)
+
+    assert_equal 3, old_loc.end_pos
+    assert_equal "123", old_loc.source
+
+    sum_loc = old_loc + new_loc
+    old_loc.concat(new_loc)
+
+    refute_equal 3, old_loc.end_pos
+    refute_equal "123", old_loc.source
+
+    assert_equal 0, old_loc.start_pos
+    assert_equal 7, old_loc.end_pos
+    assert_equal "123\nabc", old_loc.source
+
+    assert_equal sum_loc.start_pos, old_loc.start_pos
+    assert_equal sum_loc.end_pos, old_loc.end_pos
+    assert_equal sum_loc.source, old_loc.source
+  end
+
 end

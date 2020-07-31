@@ -10,3 +10,5 @@
 /lib/rbs/parser.output
 /vendor/sigs
 /Gemfile.lock
+
+test/tmp/dump/

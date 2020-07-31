@@ -77,6 +77,19 @@ module RBS
       locations.inject {|l1, l2| l1 + l2 }
     end
 
+    def concat(*others)
+      others.each { |other| self << other }
+      self
+    end
+
+    def <<(other)
+      raise "Invalid concat: buffer=#{buffer.name}, other.buffer=#{other.buffer.name}" unless other&.buffer == buffer
+      # @end_pos = other.end_pos if other
+      # @source = nil
+      # self
+      self + other      
+    end
+
     def pred?(loc)
       loc.is_a?(Location) &&
         loc.name == name &&
