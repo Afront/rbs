@@ -785,11 +785,15 @@ EOB
           stdout.puts opts.help
           exit 1
         end
+
+        raise [args, args.length].pretty_inspect
       end.order!(args)
+
+    targets_string = targets.uniq.join(',')
 
     env_hash = {
       'RBS_TEST_OPT' => test_opt(options),
-      'RBS_TEST_TARGET' => targets.uniq.join(','),
+      'RBS_TEST_TARGET' => (targets_string unless targets_string.empty?),
       'RBS_TEST_SAMPLE_SIZE' => sample_size,
       'RBS_TEST_LOGLEVEL' => RBS.logger_level
     }

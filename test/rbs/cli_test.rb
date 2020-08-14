@@ -266,4 +266,25 @@ singleton(::BasicObject)
       end
     end
   end
+
+  def test_test
+    Dir.mktmpdir do |dir|
+      dir = Pathname(dir)
+      dir.join('c.rbs').write(<<~RBS)
+        class C
+          def foo: () -> void
+        end
+      RBS
+
+      with_cli do |cli|
+        # assert_raises(SystemExit) { cli.run(%w(test)) }
+        # assert_raises(SystemExit) { cli.run(%W(-I #{dir} test)) }
+        assert_raises(SystemExit) { cli.run(%W(-I #{dir} test --target ::C ls)) }
+
+#        assert_raises(SystemExit) { cli.run(%W(-I #{dir} test ls)) }
+
+      end
+    end
+  end
+
 end
