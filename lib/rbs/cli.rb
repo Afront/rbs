@@ -760,7 +760,8 @@ Examples:
     def run_test(args, options)
       targets = []
       sample_size = nil
-#         options.libs << lib is already set
+      help = ""
+
       OptionParser.new do |opts|
         opts.banner = <<EOB
 Usage: rbs [rbs options...] test [test options...] COMMAND
@@ -781,24 +782,24 @@ EOB
           sample_size = size
         end
 
-        if args.length.zero?
-          stdout.puts opts.help
-          exit 1
-        end
-
-        raise [args, args.length].pretty_inspect
+        help = opts.help
       end.order!(args)
 
-    targets_string = targets.uniq.join(',')
+      if args.length.zero?
+        stdout.puts help
+        exit 1
+      end
 
-    env_hash = {
-      'RBS_TEST_OPT' => test_opt(options),
-      'RBS_TEST_TARGET' => (targets_string unless targets_string.empty?),
-      'RBS_TEST_SAMPLE_SIZE' => sample_size,
-      'RBS_TEST_LOGLEVEL' => RBS.logger_level
-    }
+      targets_string = targets.uniq.join(',')
 
-    Process.wait Process.spawn(env_hash, args.join(' '))
+      env_hash = {
+        'RBS_TEST_OPT' => test_opt(options),
+        'RBS_TEST_TARGET' => (targets_string unless targets_string.empty?),
+        'RBS_TEST_SAMPLE_SIZE' => sample_size,
+        'RBS_TEST_LOGLEVEL' => RBS.logger_level
+      }
+
+      Process.wait Process.spawn(env_hash, args.join(' '))
     end
   end
 end
