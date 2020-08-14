@@ -751,6 +751,10 @@ Examples:
       end
     end
 
+    def test_opt options
+      (options.dirs && options.libs) && "-I #{options.dirs} -r #{options.libs}" || nil
+    end
+
     def run_test(args, options)
       targets = []
       sample_size = nil
@@ -782,7 +786,7 @@ EOB
       end.order!(args)
 
     env_hash = {
-      'RBS_TEST_OPT' => ("-I #{options.dirs} -r #{options.libs}" if (options.dirs && options.libs)),
+      'RBS_TEST_OPT' => test_opt(options),
       'RBS_TEST_TARGET' => targets.uniq.join(','),
       'RBS_TEST_SAMPLE_SIZE' => sample_size,
       'RBS_TEST_LOGLEVEL' => RBS.logger_level
