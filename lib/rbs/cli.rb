@@ -1,4 +1,5 @@
 require "optparse"
+require "shellwords"
 
 module RBS
   class CLI
@@ -752,7 +753,8 @@ Examples:
     end
 
     def test_opt options
-      (options.dirs && options.libs) && "-I #{options.dirs} -r #{options.libs}" || nil
+      opt_string = options.dirs.map { |dir| "-I #{dir}"}.concat(options.libs.map { |lib| "-r{lib}"}).join(' ')
+      opt_string.empty? ? nil : Shellwords.escape(opt_string)
     end
 
     def run_test(args, options)
@@ -772,7 +774,7 @@ Examples:
 Options:
 EOB
         opts.on("--target TARGET", "Sets the runtime test target") do |target|
-          targets << target
+          targets << Shellwords.escape(target)
         end
 
         opts.on("--sample-size SAMPLE_SIZE", "Sets the sample size") do |size|
