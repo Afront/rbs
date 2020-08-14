@@ -266,4 +266,33 @@ singleton(::BasicObject)
       end
     end
   end
+
+  def test_test
+    Dir.mktmpdir do |dir|
+      dir = Pathname(dir)
+      dir.join('foo.rbs').write(<<~RBS)
+        class Foo
+          def foo: () -> void
+        end
+        
+        module Bar
+          class Baz
+            def foo: () -> void
+          end
+        end
+      RBS
+
+      with_cli do |cli|
+        assert_raises(SystemExit) { cli.run(%w(test)) }
+        assert_raises(SystemExit) { cli.run(%W(-I #{dir} test)) }
+        assert_raises(SystemExit) { cli.run(%W(-I #{dir} test --target ::Foo)) }
+        
+        # assert_instance_of Integer, cli.run(%W(-I #{dir} test --target ::Foo ls))
+        # assert_instance_of Integer, cli.run(%W(-I #{dir} test --target ::Bar ruby -v))
+        # assert_instance_of Integer, cli.run(%W(-I #{dir} test --target Bar::Baz rbs version))
+        # assert_instance_of Integer, cli.run(%W(-I #{dir} test --target ::Bar::Baz rake test))
+        # assert_instance_of Integer, cli.run(%W(-I #{dir} test --target ::Foo --target Bar::* rbs test --target ::Bar::Baz rbs version))
+      end
+    end
+  end
 end
