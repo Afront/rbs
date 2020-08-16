@@ -753,16 +753,15 @@ Examples:
     end
 
     def test_opt options
-      opt_string = options.dirs.map { |dir| "-I #{dir}"}.concat(options.libs.map { |lib| "-r{lib}"}).join(' ')
+      opt_string = options.dirs.map { |dir| Shellwords.escape("-I #{dir}")}.concat(options.libs.map { |lib| Shellwords.escape("-r{lib}")}).join(' ')
       opt_string.empty? ? nil : Shellwords.escape(opt_string)
     end
 
     def run_test(args, options)
       targets = []
       sample_size = nil
-      help = ""
 
-      OptionParser.new do |opts|
+      opts = OptionParser.new do |opts|
         opts.banner = <<EOB
 Usage: rbs [rbs options...] test [test options...] COMMAND
 
@@ -775,26 +774,22 @@ Examples:
 Options:
 EOB
         opts.on("--target TARGET", "Sets the runtime test target") do |target|
-          targets << Shellwords.escape(target)
+          targets << target
         end
 
         opts.on("--sample-size SAMPLE_SIZE", "Sets the sample size") do |size|
           sample_size = size
         end
-
-        help = opts.help
       end.order!(args)
 
       if args.length.zero?
-        stdout.puts help
+        stdout.puts opts.help
         exit 1
       end
 
-      targets_string = targets.uniq.join(',')
-
       env_hash = {
         'RBS_TEST_OPT' => test_opt(options),
-        'RBS_TEST_TARGET' => (targets_string unless targets_string.empty?),
+        'RBS_TEST_TARGET' => (targets.join('') unless targets.empty?),
         'RBS_TEST_SAMPLE_SIZE' => sample_size,
         'RBS_TEST_LOGLEVEL' => RBS.logger_level
       }
