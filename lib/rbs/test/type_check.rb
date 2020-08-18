@@ -204,7 +204,8 @@ module RBS
       end
 
       def is_double?(value)
-        Test.call(value, IS_AP, RSpec::Mocks::Double) if defined? ::RSpec
+        (Test.call(value, IS_AP, RSpec::Mocks::Double) if defined? RSpec::Mocks::Double) ||
+        (Test.call(value, IS_AP, Minitest::Mock) if defined? ::Minitest::Mock)
       end
 
       def value(val, type)
