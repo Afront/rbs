@@ -18,3 +18,5 @@ gem "goodcheck"
 # Test gems
 gem "rbs-amber", path: "test/assets/test-gem"
 
+
+gem "async-container", "~> 0.16.7"

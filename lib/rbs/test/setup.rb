@@ -2,6 +2,7 @@ require "rbs"
 require "rbs/test"
 require "optparse"
 require "shellwords"
+require 'async/container'
 
 include RBS::Test::SetupHelper
 
@@ -53,6 +54,9 @@ tester = RBS::Test::Tester.new(env: env)
 
 module_name = Module.instance_method(:name)
 
+
+container = Async::Container.new
+
 TracePoint.trace :end do |tp|
   class_name = module_name.bind(tp.self).call&.yield_self {|name| to_absolute_typename name }
 
@@ -60,7 +64,9 @@ TracePoint.trace :end do |tp|
     if filter.any? {|f| match(to_absolute_typename(f).to_s, class_name.to_s) } && skips.none? {|f| match(f, class_name.to_s) }
       if env.class_decls.key?(class_name)
         logger.info "Setting up hooks for #{class_name}"
-        tester.install!(tp.self, sample_size: sample_size)
+        container.async do |task|
+          task.run {tester.install!(tp.self, sample_size: sample_size)}
+        end
       end
     end
   end
@@ -68,8 +74,11 @@ end
 
 at_exit do
   if $!.nil? || $!.is_a?(SystemExit) && $!.success?
+    container.wait
+
     if tester.targets.empty?
       logger.debug { "No type checker was installed!" }
     end
+
   end
 end
