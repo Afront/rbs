@@ -753,8 +753,8 @@ Examples:
     end
 
     def test_opt options
-      opt_string = options.dirs.map { |dir| Shellwords.escape("-I #{dir}")}.concat(options.libs.map { |lib| Shellwords.escape("-r{lib}")}).join(' ')
-      opt_string.empty? ? nil : Shellwords.escape(opt_string)
+      opt_string = options.dirs.map { |dir| "-I #{Shellwords.escape(dir)}"}.concat(options.libs.map { |lib| "-r#{Shellwords.escape(lib)}"}).join(' ')
+      opt_string.empty? ? nil : opt_string
     end
 
     def run_test(args, options)
@@ -789,7 +789,7 @@ EOB
 
       env_hash = {
         'RBS_TEST_OPT' => test_opt(options),
-        'RBS_TEST_TARGET' => (targets.join('') unless targets.empty?),
+        'RBS_TEST_TARGET' => (targets.join(',') unless targets.empty?),
         'RBS_TEST_SAMPLE_SIZE' => sample_size,
         'RBS_TEST_LOGLEVEL' => RBS.logger_level
       }
