@@ -791,10 +791,12 @@ EOB
         'RBS_TEST_OPT' => test_opt(options),
         'RBS_TEST_TARGET' => (targets.join(',') unless targets.empty?),
         'RBS_TEST_SAMPLE_SIZE' => sample_size,
-        'RBS_TEST_LOGLEVEL' => RBS.logger_level
+        'RBS_TEST_LOGLEVEL' => RBS.logger_level,
+        'RUBYOPT' => "#{ENV['RUBYOPT']} -rrbs/test/setup"
       }
 
-      Process.wait Process.spawn(env_hash, args.join(' '))
+      system(env_hash, *args)
+      $?
     end
   end
 end

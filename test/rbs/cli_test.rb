@@ -1,6 +1,5 @@
 require "test_helper"
 require "stringio"
-require "thread"
 require "rbs/cli"
 
 class RBS::CliTest < Minitest::Test
@@ -287,7 +286,6 @@ singleton(::BasicObject)
         assert_raises(SystemExit) { cli.run(%W(-I #{dir} test)) }
         assert_raises(SystemExit) { cli.run(%W(-I #{dir} test --target ::Foo)) }
 
-
         assert_rbs_test_no_errors(cli, dir, %w(--target ::Foo ls))
         assert_rbs_test_no_errors(cli, dir, %w(--target ::Bar ruby -v))
         assert_rbs_test_no_errors(cli, dir, %w(--target Bar::Baz rbs version))
@@ -299,6 +297,6 @@ singleton(::BasicObject)
 
   def assert_rbs_test_no_errors cli, dir, arg_array
     args = ['-I', dir.to_s, 'test', *arg_array] 
-    assert_instance_of Integer, Thread.new { cli.run(args) }.value
+    assert_instance_of Process::Status, cli.run(args)
   end
 end
