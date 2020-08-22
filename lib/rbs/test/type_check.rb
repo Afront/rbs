@@ -206,14 +206,11 @@ module RBS
       end
 
       def is_double?(value)
-        (Test.call(value, IS_AP, RSpec::Mocks::Double) if defined? RSpec::Mocks::Double) ||
-        (Test.call(value, IS_AP, Minitest::Mock) if defined? ::Minitest::Mock)
+        double_suite && Test.call(value, IS_AP, double_suite)
       end
 
       def value(val, type)
-        if is_double?(val)
-          RBS.logger.info 'Double is detected!'
-        end
+        return true if is_double?(val) && RBS.logger.info("A double (#{val.inspect}) is detected!")
 
         case type
         when Types::Bases::Any
