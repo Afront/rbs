@@ -206,7 +206,7 @@ module RBS
       end
 
       def is_double?(value)
-        double_suite && Test.call(value, IS_AP, double_suite)
+        double_suite && Test.call(value, IS_AP, Object.const_get(double_suite))
       end
 
       def value(val, type)

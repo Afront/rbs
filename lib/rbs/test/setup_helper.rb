@@ -31,7 +31,7 @@ module RBS
         double_class = ENV['RBS_TEST_DOUBLE_CLASS']
         RBS.logger.warn "Both the double class #{double_class} and double suite (#{double_suite}) are set!" if double_class == double_suite
 
-        case double_suite&.downcase!&.strip!
+        case double_suite.downcase.strip
         when 'rspec'
           '::RSpec::Mocks::Double'
         when 'minitest'
