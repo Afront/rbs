@@ -42,7 +42,7 @@ EOF
           self_class: Integer,
           builder: DefinitionBuilder.new(env: env),
           sample_size: 100,
-          double_suite: nil
+          ignored_classes: []
         )
 
         assert typecheck.value(3, parse_type("::foo"))
@@ -74,7 +74,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100, double_suite: nil)
+        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100, ignored_classes: [])
 
         assert typecheck.value([], parse_type("::Array[::Integer]"))
         assert typecheck.value([1], parse_type("::Array[::Integer]"))
@@ -91,7 +91,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100, double_suite: nil)
+        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100, ignored_classes: [])
 
         assert typecheck.value({}, parse_type("::Hash[::Integer, ::String]"))
         assert typecheck.value(Array.new(100) {|i| [i, i.to_s] }.to_h, parse_type("::Hash[::Integer, ::String]"))
@@ -106,7 +106,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100, double_suite: nil)
+        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100, ignored_classes: [])
 
         assert typecheck.value([1,2,3].each, parse_type("Enumerator[Integer, Array[Integer]]"))
         assert typecheck.value(Array.new(400, 3).each, parse_type("Enumerator[Integer, Array[Integer]]"))
@@ -144,7 +144,7 @@ EOF
           self_class: Object,
           builder: DefinitionBuilder.new(env: env),
           sample_size: 100,
-          double_suite: nil
+          ignored_classes: []
         )
 
         parse_method_type("(Integer) -> String").tap do |method_type|
@@ -204,7 +204,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100, double_suite: nil)
+        typecheck = Test::TypeCheck.new(self_class: Integer, builder: builder, sample_size: 100, ignored_classes: [])
 
         assert typecheck.value({foo: 'foo', bar: 0, baz: :baz }, parse_type("{:foo => String, :bar => Integer, :baz => Symbol}"))
         assert typecheck.value({foo: 'foo', bar: 0, baz: :baz }, parse_type("{foo: String, bar: Integer, baz: Symbol}"))
@@ -237,7 +237,7 @@ EOF
           self_class: Object,
           builder: DefinitionBuilder.new(env: env),
           sample_size: 100,
-          double_suite: nil
+          ignored_classes: []
         )
 
         parse_method_type("(Integer) -> String").tap do |method_type|
@@ -393,21 +393,21 @@ EOF
           self_class: Integer,
           builder: DefinitionBuilder.new(env: env),
           sample_size: 100,
-          double_suite: 'Minitest::Mock'
+          ignored_classes: ['Minitest::Mock']
         )
 
         rspec_typecheck = Test::TypeCheck.new(
           self_class: Integer,
           builder: DefinitionBuilder.new(env: env),
           sample_size: 100,
-          double_suite: 'RSpec::Mocks::Double'
+          ignored_classes: ['RSpec::Mocks::Double']
         )
 
         no_mock_typecheck = Test::TypeCheck.new(
           self_class: Integer,
           builder: DefinitionBuilder.new(env: env),
           sample_size: 100,
-          double_suite: nil
+          ignored_classes: []
         )
 
         minitest_mock = ::Minitest::Mock.new
@@ -448,7 +448,7 @@ EOF
       manager.build do |env|
         builder = DefinitionBuilder.new(env: env)
 
-        typecheck = Test::TypeCheck.new(self_class: Object, builder: builder, sample_size: 100, double_suite: nil)
+        typecheck = Test::TypeCheck.new(self_class: Object, builder: builder, sample_size: 100, ignored_classes: [])
 
         builder.build_instance(type_name("::Foo")).tap do |foo|
           typecheck.overloaded_call(

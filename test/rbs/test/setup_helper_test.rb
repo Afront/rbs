@@ -29,11 +29,14 @@ class SetupHelperTest < Minitest::Test
   def test_to_double_class
     assert '::RSpec::Mocks::Double', to_double_class('rspec')
     assert '::Minitest::Mock', to_double_class('rspec')
-    assert_nil to_double_class('rr')
-    assert_nil to_double_class('foo')
-    assert_nil to_double_class('bar')
-    assert_nil to_double_class('mocha')
-    assert_nil to_double_class(nil)
+
+    silence_warnings do
+      assert_nil to_double_class('rr')
+      assert_nil to_double_class('foo')
+      assert_nil to_double_class('bar')
+      assert_nil to_double_class('mocha')
+      assert_nil to_double_class(nil)
+    end
   end
 end
 
