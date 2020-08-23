@@ -5,6 +5,17 @@ require "logger"
 
 return unless Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.7.0')
 
+begin
+  Module.const_get 'RSpec'
+rescue NameError
+  module RSpec
+    module Mocks
+      class Double
+      end
+    end
+  end  
+end
+
 class RBS::Test::TypeCheckTest < Minitest::Test
   include TestHelper
   include RBS
@@ -356,6 +367,70 @@ EOF
                          argument_error: Test::Errors::ArgumentError
           assert_empty errors
         end
+      end
+    end
+  end
+
+  def test_is_double
+    SignatureManager.new do |manager|
+      manager.files[Pathname("foo.rbs")] = <<EOF
+class Array[Elem]
+end
+
+type foo = String | Integer | [String, String] | ::Array[Integer]
+
+module M
+  type t = Integer
+  type s = t
+end
+
+interface _ToInt
+  def to_int: () -> Integer
+end
+EOF
+      manager.build do |env|
+        minitest_typecheck = Test::TypeCheck.new(
+          self_class: Integer,
+          builder: DefinitionBuilder.new(env: env),
+          sample_size: 100,
+          double_suite: 'Minitest::Mock'
+        )
+
+        rspec_typecheck = Test::TypeCheck.new(
+          self_class: Integer,
+          builder: DefinitionBuilder.new(env: env),
+          sample_size: 100,
+          double_suite: 'RSpec::Mocks::Double'
+        )
+
+        no_mock_typecheck = Test::TypeCheck.new(
+          self_class: Integer,
+          builder: DefinitionBuilder.new(env: env),
+          sample_size: 100,
+          double_suite: nil
+        )
+
+        minitest_mock = ::Minitest::Mock.new
+        rspec_mock = ::RSpec::Mocks::Double.new
+        no_mock = ::RSpec::Mocks::Double.new
+
+        assert minitest_typecheck.is_double? minitest_mock
+        assert rspec_typecheck.is_double? rspec_mock
+
+        refute minitest_typecheck.is_double? rspec_mock
+        refute rspec_typecheck.is_double? minitest_mock
+
+        refute minitest_typecheck.is_double? 1
+        refute minitest_typecheck.is_double? 'hi'
+        refute minitest_typecheck.is_double? nil
+
+        refute rspec_typecheck.is_double? 1
+        refute rspec_typecheck.is_double? 'hi'
+        refute rspec_typecheck.is_double? nil
+
+        refute no_mock_typecheck.is_double? minitest_mock
+        refute no_mock_typecheck.is_double? minitest_mock
+
       end
     end
   end
