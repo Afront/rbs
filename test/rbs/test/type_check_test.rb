@@ -412,7 +412,6 @@ EOF
 
         minitest_mock = ::Minitest::Mock.new
         rspec_mock = ::RSpec::Mocks::Double.new
-        no_mock = ::RSpec::Mocks::Double.new
 
         assert minitest_typecheck.is_double? minitest_mock
         assert rspec_typecheck.is_double? rspec_mock

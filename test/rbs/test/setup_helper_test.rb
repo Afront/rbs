@@ -3,6 +3,7 @@ require "rbs/test"
 
 class SetupHelperTest < Minitest::Test
   include RBS::Test::SetupHelper
+  include TestHelper
 
   def test_get_valid_sample_size
     assert_equal 100, get_sample_size("100")

@@ -14,7 +14,7 @@ module RBS
         @self_class = self_class
         @builder = builder
         @sample_size = sample_size
-        @ignored_classes = ignored_classes
+        @ignored_classes = ignored_classes.uniq
         @const_cache = {}
       end
 
