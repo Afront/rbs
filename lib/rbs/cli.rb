@@ -758,8 +758,10 @@ Examples:
     end
 
     def run_test(args, options)
+      ignored_classes = []
       targets = []
       sample_size = nil
+      double_suite = nil
 
       (opts = OptionParser.new do |opts|
         opts.banner = <<EOB
@@ -780,6 +782,15 @@ EOB
         opts.on("--sample-size SAMPLE_SIZE", "Sets the sample size") do |size|
           sample_size = size
         end
+
+        opts.on("--ignored-class IGNORED_CLASS", "Sets the class to be ignored") do |ignored_class|
+          ignored_classes << ignored_class
+        end
+
+        opts.on("--double-suite DOUBLE_SUITE", "Sets the double suite in use (currently supported: rspec | minitest)") do |suite|
+          double_suite = suite
+        end
+
       end).order!(args)
 
       if args.length.zero?
@@ -788,11 +799,13 @@ EOB
       end
 
       env_hash = {
+        'RUBYOPT' => "#{ENV['RUBYOPT']} -rrbs/test/setup",
         'RBS_TEST_OPT' => test_opt(options),
-        'RBS_TEST_TARGET' => (targets.join(',') unless targets.empty?),
-        'RBS_TEST_SAMPLE_SIZE' => sample_size,
         'RBS_TEST_LOGLEVEL' => RBS.logger_level,
-        'RUBYOPT' => "#{ENV['RUBYOPT']} -rrbs/test/setup"
+        'RBS_TEST_SAMPLE_SIZE' => sample_size,
+        'RBS_TEST_DOUBLE_SUITE' => double_suite,
+        'RBS_TEST_IGNORED_CLASSES' => (ignored_classes.join(',') unless ignored_classes.empty?),
+        'RBS_TEST_TARGET' => (targets.join(',') unless targets.empty?)
       }
 
       system(env_hash, *args)
